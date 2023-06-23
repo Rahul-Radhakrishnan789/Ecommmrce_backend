@@ -14,7 +14,9 @@ const {userRegister,
     showCart,
     addToWishlist,
     showWishlist,
-    removeFromWishlist} = require("../controllers/userController")
+    removeFromWishlist,
+    payment,
+    paymentByPaypal} = require("../controllers/userController")
 
 
 router.post('/api/users/register',userRegister);
@@ -28,15 +30,19 @@ router.get('/api/admin/users',adminAuth,viewUser);
 
 router.get('/api/admin/users/:id',adminAuth,getUserById)
 
-router.post('/api/users/:id/cart',addToCart)
+router.post('/api/users/:id/cart',userAuth,addToCart)
 
-router.get('/api/users/:id/cart',showCart)
+router.get('/api/users/:id/showcart',userAuth,showCart)
 
-router.post('/api/users/:id/wishlist',addToWishlist)
+router.post('/api/users/:id/wishlist',userAuth,addToWishlist)
 
-router.get('/api/users/:id/wishlist',showWishlist)
+router.get('/api/users/:id/wishlist',userAuth,showWishlist)
 
-router.delete('/api/users/:id/wishlist',removeFromWishlist)
+router.delete('/api/users/:id/wishlist',userAuth,removeFromWishlist)
+
+router.post('/api/users/payment/:id',userAuth,payment)
+
+router.get("/api/users/payment/paypal/:id",paymentByPaypal)
 
 
 module.exports = router
