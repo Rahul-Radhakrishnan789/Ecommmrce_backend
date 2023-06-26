@@ -1,27 +1,37 @@
 const Products = require("../models/productsModel");
+
 const User = require("../models/userModel")
+
 const bcrypt = require("bcrypt")
+
 const jwt = require("jsonwebtoken")
 
 const paypal = require("paypal-rest-sdk")
 
 const stripe = require('stripe')(process.env.SECRET_KEY)
 
+const validation = require('../middlewares/schemaValidation')
 
 paypal.configure({
   'mode': 'sandbox', //sandbox or live 
-  'client_id': "AXBT51O6K6MpWQbv2zC30pxKyzPIUFBAp7wCP7amXWbdi_Vq7lscj5UbnpZkyHu2MrEYH0USz-WMhiQ0", 
-  'client_secret':'EFqw5vL3UEnOYQnXHkRgw3SvbODdBb0tKj2BwLa6OP8bJ-wZZDkrUtIIBiQIt3JbtBHEfXa8C1mu-aGn' 
+  'client_id': process.env.client_id, 
+  'client_secret':process.env.client_secret_key
 });
 
 
 
 // register user
-// app.post('/api/users/register',
+
 
  const userRegister = async (req,res) => {
-    try{
-      const {username,password,email} = req.body;
+
+
+     const {value,error} = validation.userjoi.validate(req.body)
+     if(error){
+      return res.status(400).json({message:error.details[0].message});
+     }
+
+      const {username,password,email} = value;
 
       const hashedPassword = await bcrypt.hash(password,10)
 
@@ -29,22 +39,24 @@ paypal.configure({
 
       await user.save()
   
-       res.json({message:"user account registered succesfully"})
+       res.status(200).json({
+        status:"success",
+        message:"user account registered succesfully"})
     }
-    catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while registering the user account' });
-    }
-  
-  }
-  
+    
   
   //user login
-//   app.post('/api/users/login',
+
   
  const userLogin =  async (req,res) => {
-    try{
-      const {username,password} = req.body;
+
+  const { error, value } = validateSchema.adschema.validate(req.body);
+  if (error) {
+    return res.status(400).json({message:error.details[0].message});
+  }
+
+  
+      const {username,password} = value;
       const user = await User.findOne({username:username})
       if (!user ) {
         return res.status(401).json({ error: 'Invalid username ' });
@@ -58,48 +70,47 @@ paypal.configure({
 
      const token = jwt.sign({username:user.username},'rahul',) //{expiresIn:500}//seconds
 
-      res.json({ message: 'Login successful',token});
+      res.json({ 
+        status:"success",
+        message: 'Login successful',
+        data:token
+      });
     }
-    catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while logging in' });
-    }
-  }
+   
   
   //view all users
 
 
  const viewUser = async (req,res) => {
-    try{
+  
       const users = await User.find();
-      res.json(users)
-    }catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while retrieving the users' });
-    }
+      res.json({
+        status:"success",
+        data:users
+      })
+    
   }
   
   // //get a specific user details
 
   
   const getUserById = async (req,res) => {
-    try{
+ 
       
       const user = await User.findById(req.params.id)
       if(!user){
         return res.status(404).json({ error: 'User not found' });
       }
-      res.json(user)
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while retrieving the user' });
-    }
-  };
+      res.json({
+        status:"success",
+        data:user,
+      })
+    } 
   
   //add product to cart
 
   const addToCart  = async (req,res) => {
-    try{
+    
      const user = await User.findById(req.params.id);
 
      if(!user){
@@ -114,35 +125,33 @@ paypal.configure({
      user.cart.push(product)
      await user.save()
     
-     res.json({ message: 'Product added to cart successfully', user });
+     res.json({
+                 status:"success",
+                 message: 'Product added to cart successfully',
+                 data: user
+                 });
     }
-    catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while adding to cart' });
-    }
-  }
-
+   
   // show the cart
 
   const showCart = async (req,res) => {
-   try{ 
+ 
     const user = await User.findById(req.params.id).populate('cart')
       
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(user.cart)
+    res.json({
+              status:"success",
+              data:user.cart
+            })
    }
-   catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred while showing the cart' });
-  }
-}
+   
 
   //add product to wishlist
 
   const addToWishlist = async (req,res) => {
-     try{
+     
 
       const user = await User.findById(req.params.id);
 
@@ -159,19 +168,17 @@ paypal.configure({
        user.wishlist.push(product)
       await user.save()
 
-      res.json({ message: 'Product added to wishlist successfully', user });
+      res.json({
+                status:"success",
+                 message: 'Product added to wishlist successfully',
+                 data: user 
+                });
      }
-     catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while showing the wishlist' });
-    }
-
-  }
-
+    
   //show wishlist
 
   const showWishlist = async (req,res) => {
-    try{
+
     const user = await User.findById(req.params.id).populate('wishlist')
 
     if(!user)
@@ -179,19 +186,18 @@ paypal.configure({
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user.wishlist)
+    res.json({
+         
+         status:"success",
+         data:user.wishlist
+        })
   }
-  catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred while showing the wishlist' });
 
-  }
-}
 
 //delete from wishlist 
 
 const removeFromWishlist =  async (req,res) => {
-  try{
+
      const {productid} = req.body;
        const user  = await User.findById(req.params.id)
        if(!user){
@@ -207,19 +213,19 @@ const removeFromWishlist =  async (req,res) => {
 
        await user.save()
 
-  }
-  catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred while showing the wishlist' });
+       res.status(200).json({
+        status:"success",
+        message:"product Removed From Wishlist"
+       })
 
   }
-}
+ 
 
 
 // proceed to payment using stripe
 
 const payment = async (req,res) => {
-  try{
+ 
        const userId = req.params.id
 
        const user = await User.findById(userId).populate('cart')
@@ -266,9 +272,18 @@ const payment = async (req,res) => {
       totalAmount:totalSum
      })
 
+     user.cart = [];
+
      await user.save()
   
-    res.json({ url: session.url, orderId: session.id, user });
+    res.status(200).json({
+      
+       status:"success",
+       message:"payment succesful",
+       url: session.url,
+       orderId: session.id,
+       data: user
+       });
 
 
      
@@ -276,16 +291,12 @@ const payment = async (req,res) => {
 
 
   }
-  catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred ' });
+  
 
-  }
-}
-
+//proceed payment using paypal
 
 const paymentByPaypal = async (req,res) => {
-  try{
+ 
 
     const userId = req.params.id
 
@@ -311,19 +322,10 @@ const paymentByPaypal = async (req,res) => {
         payment_method: 'paypal'
       },
       redirect_urls: {
-        return_url: 'https://ruperhat.com/wp-content/uploads/2020/06/Paymentsuccessful21.png', // Replace with your success URL
-        cancel_url: 'https://media.licdn.com/dms/image/C5112AQGiR7AdalYNjg/article-cover_image-shrink_600_2000/0/1582176281444?e=2147483647&v=beta&t=QVzBFLJpbDlQMX_H5iKXr7Jr1w6Pm60tOJb47rjpX6Q' // Replace with your cancel URL
+        return_url: 'https://ruperhat.com/wp-content/uploads/2020/06/Paymentsuccessful21.png', 
+        cancel_url: 'https://media.licdn.com/dms/image/C5112AQGiR7AdalYNjg/article-cover_image-shrink_600_2000/0/1582176281444?e=2147483647&v=beta&t=QVzBFLJpbDlQMX_H5iKXr7Jr1w6Pm60tOJb47rjpX6Q' 
       },
       transactions: [{
-        // item_list: {
-        //   items: [{
-        //     name: 'Product Name', // Replace with your product name
-        //     sku: 'PRODUCT_SKU', // Replace with your product SKU
-        //     price: '100.00', // Replace with your product price
-        //     currency: 'USD',
-        //     quantity: 1
-        //   }]
-        // },
         amount: {
           currency: 'USD',
           total: totalSum  
@@ -338,7 +340,12 @@ const paymentByPaypal = async (req,res) => {
         res.status(500).json({ error: 'An error occurred while creating the PayPal checkout session' });
       } else {
         const approvalUrl = payment.links.find(link => link.rel === 'approval_url').href;
-        res.json({url: approvalUrl,user });
+        res.json({
+          status:"success",
+          message:"payment successful",
+          url: approvalUrl,
+          data:user 
+        });
 
       }
     });
@@ -349,17 +356,15 @@ const paymentByPaypal = async (req,res) => {
       totalAmount:totalSum
      })
 
+     user.cart = [];
+
      await user.save()
 
 
+ 
   
   }
-  catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred while payment process' });
-  }
-
-}
+ 
 
 
 

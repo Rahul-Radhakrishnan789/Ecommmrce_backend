@@ -1,6 +1,11 @@
 const Admin = require("../models/adminModel")
+
 const bcrypt = require("bcrypt")
+
 const jwt = require("jsonwebtoken")
+
+const validation = require('../middlewares/schemaValidation')
+
 
 
 
@@ -8,8 +13,13 @@ const jwt = require("jsonwebtoken")
   //register admin
 
   const adminRegister = async (req,res) => {
-    try{
-         const {username,password,name,email}= req.body;
+
+    const {error,value} = validation.adminJoi.validate(req.body)
+    if(error){
+      return res.status(400).json({message:error.details[0].message});
+    }
+    
+         const {username,password,name,email}= value;
 
          const hashedPassword =  await bcrypt.hash(password,10)
 
@@ -17,12 +27,10 @@ const jwt = require("jsonwebtoken")
 
          await admin.save()
 
-         res.json({ message: 'Admin account registered successfully' });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'An error occurred while registering the admin account' });
-      }
+         res.json({ message: 'Admin account registered successfully',
+                     status:"success",
+                   });
+  
 
 }
 
@@ -30,8 +38,14 @@ const jwt = require("jsonwebtoken")
 
 
 const loginAdmin = async (req,res) => {
-    try{
-        const {username,password} = req.body;
+
+  
+  const {error,value} = validation.adminJoi.validate(req.body)
+  if(error){
+    return res.status(400).json({message:error.details[0].message});
+  }
+  
+        const {username,password} = value;
 
         const admin = await Admin.findOne({username:username})
         if (!admin ) {
@@ -43,14 +57,12 @@ const loginAdmin = async (req,res) => {
         }
         const token = jwt.sign({username:admin.username}, 'rahul',);  //{expiresIn:1000}--to set timeout
 
-          res.json({ message: 'Login successful' , token});
+          res.json({ status:"success",
+                message: 'Login successful' ,
+                data:  token});
     }
    
-    catch (error) { 
-      console.error(error);
-      res.status(500).json({ error: 'An error occurred while logging in' });
-    }
-}
+    
 
 
 

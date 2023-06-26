@@ -6,7 +6,8 @@ require('dotenv').config();
 
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }))
+
+// app.use(express.urlencoded({ extended: false }));
 
 mongoose.connect('mongodb://127.0.0.1/mongoconnection', { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;

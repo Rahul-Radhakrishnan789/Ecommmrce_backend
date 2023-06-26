@@ -6,9 +6,14 @@ const mongoose = require("mongoose")
  
 const userSchema = new mongoose.Schema({
     email: String,
-    username: String,
-    password: String,
-   
+    username: { 
+      type: String,
+   required: true,
+   },
+    password:{ 
+      type: String,
+   required: true,
+   },
   cart:  [ 
     {
       type: mongoose.Schema.Types.ObjectId,
