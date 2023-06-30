@@ -27,7 +27,8 @@ const validation = require('../middlewares/schemaValidation')
 
          await admin.save()
 
-         res.json({ message: 'Admin account registered successfully',
+         res.json({ 
+                     message: 'Admin account registered successfully',
                      status:"success",
                    });
   
@@ -46,7 +47,7 @@ const loginAdmin = async (req,res) => {
   }
   
         const {username,password} = value;
-
+ 
         const admin = await Admin.findOne({username:username})
         if (!admin ) {
           return res.status(401).json({ error: 'Invalid username ' });

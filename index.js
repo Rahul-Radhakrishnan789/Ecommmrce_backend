@@ -2,14 +2,22 @@ const express = require("express")
 const app = express();
 const mongoose = require("mongoose")
 require('dotenv').config();
+const cors = require('cors')
+
+const morgan  = require('morgan')
 
 
-
+app.use(cors());
+app.use(morgan('dev'));
 app.use(express.json());
 
-// app.use(express.urlencoded({ extended: false }));
 
-mongoose.connect('mongodb://127.0.0.1/mongoconnection', { useNewUrlParser: true, useUnifiedTopology: true });
+// mongoose.connect('mongodb://127.0.0.1/mongoconnection', { useNewUrlParser: true, useUnifiedTopology: true });
+// const db = mongoose.connection;
+// db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+mongoose.connect('mongodb+srv://razzrahul789:gY0K4E5E97YzdNqg@cluster0.n1uxpxa.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true });
+
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
